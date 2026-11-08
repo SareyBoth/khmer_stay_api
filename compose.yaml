@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: khmerstay
+      POSTGRES_USER: khmerstay
+      POSTGRES_PASSWORD: khmerstay
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U khmerstay -d khmerstay"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://khmerstay:khmerstay@postgres:5432/khmerstay?sslmode=disable
+      MIGRATIONS_DIR: /app/migrations
+      UPLOADS_DIR: /app/uploads
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  postgres_data:
+  uploads_data:
